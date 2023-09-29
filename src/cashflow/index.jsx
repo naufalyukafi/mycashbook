@@ -1,19 +1,48 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
+import db from '../config/db';
 
 function CashflowScreen({ navigation }) {
-    const data = [
-        { type: 'pemasukan', amount: 250000, description: 'Dapat bayaran panitia', date: '18-10-2023' },
-        { type: 'pengeluaran', amount: 150000, description: 'Beli barang', date: '20-10-2023' },
-        { type: 'pemasukan', amount: 500000, description: 'Bonus', date: '22-10-2023' },
-        // Tambahkan data transaksi lainnya di sini
-    ];
+    const [transactions, setTransactions] = useState([]);
+
+    useEffect(() => {
+        // Mengambil data transaksi dari tabel transactions
+        db.transaction((tx) => {
+            tx.executeSql(
+                'SELECT * FROM transactions;',
+                [],
+                (tx, { rows }) => {
+                    // Mengonversi hasil query ke dalam bentuk array
+                    const result = [];
+                    for (let i = 0; i < rows.length; i++) {
+                        result.push(rows.item(i));
+                    }
+                    setTransactions(result);
+                },
+                (error) => {
+                    console.error('Terjadi kesalahan: ' + error);
+                }
+            );
+        });
+    }, []);
+
+    const removeAllTransaction = () => {
+        db.transaction((tx) => {
+            tx.executeSql('DELETE FROM transactions', [], (tx, results) => {
+                if (results.rowsAffected > 0) {
+                    alert('Semua data berhasil dihapus dari tabel transactions.');
+                } else {
+                    alert('Tidak ada data yang dihapus dari tabel transactions.');
+                }
+            });
+        });
+    }
 
     const renderItem = ({ item }) => (
         <View style={styles.transactionItem}>
-            <FontAwesome
-                name={item.type === 'pemasukan' ? 'arrow-left' : 'arrow-right'}
+            <AntDesign
+                name={item.type === 'pemasukan' ? 'arrowleft' : 'arrowright'}
                 color={item.type === 'pemasukan' ? 'green' : 'red'}
                 size={24}
             />
@@ -31,10 +60,16 @@ function CashflowScreen({ navigation }) {
         <View style={styles.container}>
             <Text style={styles.title}>Detail Cash Flow</Text>
             <FlatList
-                data={data}
+                data={transactions}
                 renderItem={renderItem}
                 keyExtractor={(item, index) => index.toString()}
             />
+            <TouchableOpacity
+                style={[styles.backButton, { backgroundColor: 'red' }]}
+                onPress={removeAllTransaction}
+            >
+                <Text style={styles.backButtonText}>Hapus</Text>
+            </TouchableOpacity>
             <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}

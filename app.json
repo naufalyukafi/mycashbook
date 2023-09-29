@@ -1,4 +1,10 @@
 {
-  "name": "mycashbook",
-  "displayName": "mycashbook"
+  "expo": {
+    "name": "mycashbook",
+    "slug": "mycashbook",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
 }

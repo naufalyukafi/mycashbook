@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import db from '../config/db';
 
-function LoginScreen({ navigation }) {
+function RegisterScreen({ navigation }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const handleLogin = () => {
+
+    const handleRegister = () => {
         db.transaction((tx) => {
-            // SELECT query untuk memeriksa apakah username dan password cocok
+            // Lakukan INSERT data pengguna ke dalam tabel users
             tx.executeSql(
-                'SELECT * FROM users WHERE username = ? AND password = ?;',
+                'INSERT INTO users (username, password) VALUES (?, ?);',
                 [username, password],
                 (tx, results) => {
-                    if (results.rows.length > 0) {
-                        alert('Login berhasil!');
-                        navigation.navigate('Home'); // Navigasi ke halaman Home setelah login berhasil
+                    if (results.rowsAffected > 0) {
+                        alert('Registrasi berhasil!');
+                        navigation.navigate('Login'); // Navigasi ke halaman login setelah registrasi
                     } else {
-                        alert('Username atau password salah. Silakan coba lagi.');
+                        alert('Registrasi gagal. Silakan coba lagi.');
                     }
                 },
                 (error) => {
@@ -28,30 +29,34 @@ function LoginScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Image
-                source={require('../assets/logo.jpg')}
-                style={styles.logo}
-            />
-            <Text style={styles.appTitle}>MyCashBook v1.0</Text>
+            <Text style={styles.title}>Register</Text>
+
+            <Text style={styles.label}>Username:</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Username"
+                placeholder="Masukkan username"
                 value={username}
                 onChangeText={(text) => setUsername(text)}
             />
+
+            <Text style={styles.label}>Password:</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder="Masukkan password"
                 secureTextEntry
                 value={password}
                 onChangeText={(text) => setPassword(text)}
             />
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
+
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+                <Text style={styles.buttonText}>Daftar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.loginButton, { marginTop: 3 }]} onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.buttonText}>Register</Text>
+            <TouchableOpacity
+                style={[styles.button, { backgroundColor: 'blue' }]}
+                onPress={() => navigation.navigate('Login')}
+            >
+                <Text style={styles.buttonText}>Kembali ke Login</Text>
             </TouchableOpacity>
         </View>
     );
@@ -64,15 +69,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#fff',
     },
-    logo: {
-        width: 100,
-        height: 100,
-        marginBottom: 20,
-    },
-    appTitle: {
-        fontSize: 24,
+    title: {
+        fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 20,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textDecorationLine: 'underline',
     },
     input: {
         width: '80%',
@@ -83,16 +89,18 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         paddingHorizontal: 10,
     },
-    loginButton: {
-        backgroundColor: 'blue',
+    button: {
+        backgroundColor: 'green',
         padding: 10,
         borderRadius: 5,
+        marginTop: 20,
     },
     buttonText: {
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 
-export default LoginScreen;
+export default RegisterScreen;

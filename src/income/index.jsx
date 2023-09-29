@@ -1,25 +1,61 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import DatePicker from '@react-native-community/datetimepicker';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import db from '../config/db';
 
 function AddIncomeScreen({ navigation }) {
-    const [date, setDate] = useState(new Date(2023, 0, 1));
+    const [date, setDate] = useState(new Date());
     const [nominal, setNominal] = useState('');
     const [keterangan, setKeterangan] = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const resetDate = () => {
-        setDate(new Date(2023, 0, 1));
+        setDate(new Date());
     };
 
     const formatCurrency = (value) => {
         return 'Rp. ' + value.toLocaleString('id-ID');
     };
 
+    const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            setDate(selectedDate);
+        }
+    };
+
+    const showDatepicker = () => {
+        setShowDatePicker(true);
+    };
+
     const handleSimpan = () => {
-        // Lakukan logika penyimpanan data pemasukan di sini
-        // Anda dapat menggunakan state date, nominal, dan keterangan
-        // Setelah data disimpan, Anda dapat kembali ke halaman sebelumnya (Home)
-        navigation.goBack();
+        const formattedDate = date.toLocaleString('default', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        // console.log
+        // Menyimpan data pemasukan ke dalam database SQLite
+        db.transaction((tx) => {
+            tx.executeSql(
+                'INSERT INTO transactions (type, amount, description, date) VALUES (?, ?, ?, ?);',
+                ['pemasukan', nominal, keterangan, formattedDate],
+                (tx, results) => {
+                    if (results.rowsAffected > 0) {
+                        alert('Pemasukan berhasil disimpan.');
+                        navigation.goBack();
+                    } else {
+                        alert('Gagal menyimpan pemasukan. Silakan coba lagi.');
+                    }
+                },
+                (error) => {
+                    alert('Terjadi kesalahan: ' + error);
+                }
+            );
+        });
+
+        // Kembali ke halaman sebelumnya (Home)
+        // navigation.goBack();
     };
 
     return (
@@ -27,12 +63,17 @@ function AddIncomeScreen({ navigation }) {
             <Text style={styles.title}>Tambah Pemasukan</Text>
 
             <Text style={styles.label}>Tanggal:</Text>
-            <DatePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => setDate(selectedDate)}
-            />
+            <TouchableOpacity style={styles.datePickerButton} onPress={showDatepicker}>
+                <Text>{date.toLocaleDateString()}</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={date}
+                    mode="date"
+                    display="spinner"
+                    onChange={handleDateChange}
+                />
+            )}
 
             <Text style={styles.label}>Nominal:</Text>
             <TextInput
@@ -101,6 +142,17 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    datePickerButton: {
+        width: '80%',
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        borderRadius: 5,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
     },
 });
 

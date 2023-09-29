@@ -1,14 +1,45 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+import db from '../config/db';
 
 function SettingScreen({ navigation }) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
+
     const handleSimpan = () => {
-        // Lakukan logika penyimpanan pengaturan di sini
-        // Anda dapat menggunakan state passwordSaatIni dan passwordBaru
-        // Setelah pengaturan disimpan, Anda dapat kembali ke halaman sebelumnya
-        navigation.goBack();
+        db.transaction((tx) => {
+            // SELECT query untuk memeriksa apakah password saat ini benar
+            tx.executeSql(
+                'SELECT * FROM users WHERE username = ? AND password = ?;',
+                ['user', currentPassword], // Mengganti 'user' sesuai dengan username
+                (tx, results) => {
+                    if (results.rows.length > 0) {
+                        // UPDATE query untuk mengganti password
+                        tx.executeSql(
+                            'UPDATE users SET password = ? WHERE username = ?;',
+                            [newPassword, 'user'], // mengganti 'user' sesuai dengan username
+                            (tx, results) => {
+                                if (results.rowsAffected > 0) {
+                                    alert('Password berhasil direset.');
+                                } else {
+                                    alert('Gagal mereset password. Silakan coba lagi.');
+                                }
+                            },
+                            (error) => {
+                                alert('Terjadi kesalahan: ' + error);
+                            }
+                        );
+                    } else {
+                        // Password saat ini tidak cocok
+                        alert('Password saat ini salah. Silakan coba lagi.');
+                    }
+                },
+                (error) => {
+                    alert('Terjadi kesalahan: ' + error);
+                }
+            );
+        });
     };
 
     return (
@@ -36,7 +67,7 @@ function SettingScreen({ navigation }) {
             />
 
             <TouchableOpacity style={styles.button} onPress={handleSimpan}>
-                <Text style={styles.buttonText}>Simpan</Text>
+                <Text style={styles.buttonText}>Reset Password</Text>
             </TouchableOpacity>
 
             <View style={styles.aboutButton}>
@@ -47,16 +78,16 @@ function SettingScreen({ navigation }) {
                     style={{ marginRight: 10 }}
                 />
                 <View style={styles.aboutContent}>
-                    <Text style={styles.aboutText}>About this app</Text>
                     <Text style={styles.aboutInfo}>
-                        Aplikasi ini dibuat oleh:
+                        <Text style={styles.aboutText}>About this app</Text>
+
+                        {'\n'}Aplikasi ini dibuat oleh:
                         {'\n'}Nama: Naufal Yukafi Ridlo
                         {'\n'}NIM: 1941720040
                         {'\n'}Tanggal: 28 September 2023
                     </Text>
                 </View>
             </View>
-
         </View>
     );
 }
