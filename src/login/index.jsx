@@ -46,13 +46,15 @@ function LoginScreen({ navigation }) {
                 value={password}
                 onChangeText={(text) => setPassword(text)}
             />
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
-            </TouchableOpacity>
+            <View style={{ width: '80%' }}>
+                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                    <Text style={styles.buttonText}>Login</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.loginButton, { marginTop: 3 }]} onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.buttonText}>Register</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={[styles.loginButton, { marginTop: 3 }]} onPress={() => navigation.navigate('Register')}>
+                    <Text style={styles.buttonText}>Register</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -92,6 +94,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+        textAlign: 'center'
     },
 });
 
